@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="fa" dir="rtl">
 <head>
@@ -5,76 +6,78 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>BTC FUTURES AI</title>
 <style>
-*{box-sizing:border-box}body{margin:0;padding:16px;background:#090e19;color:#eaf0fb;font-family:Tahoma,Arial}
-header,.card{background:#111c30;border:1px solid #293954;border-radius:15px;padding:16px;margin-bottom:13px}
-h1{color:#ff9a35;font-size:22px;margin:0 0 8px}.muted,small{color:#9eabc0}
-.price{font-size:26px;font-weight:bold;margin:14px 0}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.metric{background:#0a1425;padding:12px;border-radius:10px}
-.metric small{display:block;margin-bottom:8px}.metric b{font-size:16px}
-button{width:100%;border:0;border-radius:10px;padding:14px;background:#ff9635;color:#101827;font-size:16px;font-weight:bold;margin-top:12px}
-table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:11px 4px;text-align:center;border-bottom:1px solid #293954}
-.good{color:#36d99a}.bad{color:#ff6678}.neutral{color:#ffca70}.note{font-size:11px;line-height:2;color:#9eabc0}
+*{box-sizing:border-box}
+body{margin:0;padding:18px;background:#0b1220;color:#e8eefc;font-family:Tahoma,Arial}
+.wrap{max-width:800px;margin:auto}
+.muted{color:#9aabc8;font-size:13px}
+.card{background:#131f33;border:1px solid #263854;border-radius:14px;padding:16px;margin:14px 0}
+h1{font-size:24px}
+.price{font-size:34px;font-weight:bold;direction:ltr;text-align:right;margin:15px 0}
+button{background:#f59e0b;border:0;border-radius:9px;padding:11px 16px;font-weight:bold}
+.status{padding:8px;border-radius:8px;background:#263854;display:inline-block}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.metric{background:#0e192b;padding:12px;border-radius:10px}
+.metric small{display:block;color:#9aabc8;margin-bottom:8px}
+.good{color:#4ade80}.bad{color:#fb7185}.warn{color:#fbbf24}
+.foot{font-size:12px;color:#9aabc8;line-height:2}
 </style>
 </head>
 <body>
-<header><h1>₿ BTC FUTURES AI</h1><div class="muted">نسخه آزمایشی رایگان | تحلیل BTCUSDT</div>
-<div class="price" id="price">در انتظار دریافت داده…</div><small>قیمت آخرین کندل — USDT</small></header>
-<section class="card"><h3>اطلاعات بازار</h3><div class="grid">
-<div class="metric"><small>منبع داده</small><b id="source">—</b></div>
-<div class="metric"><small>فاندینگ ریت</small><b id="funding">—</b></div></div>
-<div id="status" class="muted" style="margin-top:12px">آماده دریافت اطلاعات</div>
-<button onclick="run()">به‌روزرسانی و تحلیل</button></section>
-<section class="card"><h3>تحلیل چندتایم‌فریمی</h3>
-<table><thead><tr><th>تایم‌فریم</th><th>قیمت</th><th>RSI</th><th>جهت</th></tr></thead>
-<tbody id="rows"><tr><td colspan="4">هنوز داده‌ای دریافت نشده</td></tr></tbody></table></section>
-<section class="card"><h3>جمع‌بندی سیستم</h3><div class="price neutral" id="signal">NO TRADE</div><div id="reason" class="muted">برای شروع، دکمه به‌روزرسانی را بزنید.</div></section>
-<section class="card"><h3>حمایت و مقاومت ۱۵ دقیقه</h3><div id="levels" class="muted">—</div></section>
-<section class="card"><h3>هشدار ریسک</h3><p class="note">این ابزار صرفاً تحلیلی و آزمایشی است. هیچ سیگنالی بدون ریسک نیست و سود تضمینی وجود ندارد. پیش از معامله، حد ضرر و اندازه موقعیت را خودتان بررسی کنید. این نسخه سفارش ثبت نمی‌کند.</p></section>
+<div class="wrap">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+<div><div class="muted">نسخه آزمایشی رایگان</div><h1>BTC FUTURES AI</h1></div>
+<button id="refresh">به‌روزرسانی</button>
+</div>
+<div class="card">
+<div style="display:flex;justify-content:space-between;gap:8px">
+<b>قیمت BTC/USDT اسپات LBank</b>
+<span id="state" class="status">در حال اتصال…</span>
+</div>
+<div id="price" class="price">—</div>
+<div id="updated" class="muted">—</div>
+</div>
+<div class="card">
+<h3>وضعیت داده‌ها</h3>
+<div class="grid">
+<div class="metric"><small>قیمت اسپات</small><b id="spot">—</b></div>
+<div class="metric"><small>داده فیوچرز</small><b class="warn">ناموجود</b></div>
+<div class="metric"><small>Funding Rate</small><b>ناموجود</b></div>
+<div class="metric"><small>Open Interest</small><b>ناموجود</b></div>
+</div>
+</div>
+<div class="card">
+<h3>سیگنال معاملاتی</h3>
+<b id="signal" class="warn">بدون معامله؛ داده معتبر فیوچرز هنوز دریافت نشده است.</b>
+<p>قیمت اسپات به‌تنهایی برای صدور سیگنال فیوچرز کافی نیست. تا اتصال داده قراردادها، لانگ یا شورت پیشنهاد نمی‌شود.</p>
+</div>
+<div class="card foot">
+این نسخه فقط اتصال قیمت عمومی اسپات LBank را آزمایش می‌کند. هنوز به داده واقعی قراردادهای پرپچوال، Funding Rate و Open Interest متصل نیست. هیچ معامله‌ای انجام نمی‌دهد و سود را تضمین نمی‌کند.
+</div>
+</div>
 <script>
-const frames=[["15m","15"],["1h","60"],["4h","240"],["1d","D"]];
-async function candles(tf,bybit){
- const urls=[
- `https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=${tf}&limit=100`,
- `https://api.bybit.com/v5/market/kline?category=linear&symbol=BTCUSDT&interval=${bybit}&limit=100`
- ];
- let errors=[];
- for(let i=0;i<urls.length;i++){
-  try{
-   const r=await fetch(urls[i]);if(!r.ok)throw Error("HTTP "+r.status);
-   const j=await r.json();let a;
-   if(i===0&&Array.isArray(j))a=j.map(x=>({o:+x[1],h:+x[2],l:+x[3],c:+x[4]}));
-   else if(j.retCode===0&&j.result?.list)a=j.result.list.slice().reverse().map(x=>({o:+x[1],h:+x[2],l:+x[3],c:+x[4]}));
-   if(a?.length>30)return {a,source:i===0?"Binance Futures":"Bybit"};
-   throw Error("داده نامعتبر");
-  }catch(e){errors.push(e.message)}
- }
- throw Error(errors.join(" / "));
-}
-function rsi(a){let g=0,l=0;for(let i=a.length-14;i<a.length;i++){let d=a[i]-a[i-1];if(d>0)g+=d;else l-=d}return l===0?100:100-100/(1+g/l)}
-function ema(a,n){let k=2/(n+1),v=a[0];for(let i=1;i<a.length;i++)v=a[i]*k+v*(1-k);return v}
-function analyze(a){let c=a.map(x=>x.c),last=c.at(-1),e20=ema(c.slice(-60),20),e50=ema(c.slice(-80),50),rv=rsi(c);
-let dir="خنثی";if(last>e20&&e20>e50&&rv>52&&rv<75)dir="صعودی";if(last<e20&&e20<e50&&rv<48&&rv>25)dir="نزولی";
-return {last,rv,dir,lo:Math.min(...a.slice(-30).map(x=>x.l)),hi:Math.max(...a.slice(-30).map(x=>x.h))}}
-async function run(){
- const status=document.getElementById("status");status.textContent="در حال دریافت داده از صرافی‌ها…";
- document.getElementById("signal").textContent="در حال تحلیل…";
+const $=x=>document.getElementById(x);
+async function load(){
+ $('state').textContent='در حال دریافت…';
  try{
-  const data=await Promise.all(frames.map(async f=>({tf:f[0],...await candles(f[0],f[1])})));
-  const out=data.map(x=>({tf:x.tf,source:x.source,...analyze(x.a)}));
-  document.getElementById("price").textContent=out[0].last.toLocaleString("en-US",{maximumFractionDigits:2})+" USDT";
-  document.getElementById("source").textContent=[...new Set(out.map(x=>x.source))].join(" + ");
-  document.getElementById("rows").innerHTML=out.map(x=>`<tr><td>${x.tf}</td><td>${x.last.toLocaleString("en-US",{maximumFractionDigits:1})}</td><td>${x.rv.toFixed(1)}</td><td class="${x.dir==="صعودی"?"good":x.dir==="نزولی"?"bad":"neutral"}">${x.dir}</td></tr>`).join("");
-  let up=out.filter(x=>x.dir==="صعودی").length,down=out.filter(x=>x.dir==="نزولی").length;
-  let s="NO TRADE",reason="تایم‌فریم‌ها هم‌جهت نیستند؛ فعلاً ورود تأیید نمی‌شود.";
-  if(up===4){s="LONG";reason="هر چهار تایم‌فریم صعودی‌اند؛ این تأیید روند است، نه نقطه ورود قطعی."}
-  if(down===4){s="SHORT";reason="هر چهار تایم‌فریم نزولی‌اند؛ این تأیید روند است، نه نقطه ورود قطعی."}
-  let el=document.getElementById("signal");el.textContent=s;el.className="price "+(s==="LONG"?"good":s==="SHORT"?"bad":"neutral");
-  document.getElementById("reason").textContent=reason;
-  document.getElementById("levels").textContent="حمایت تقریبی: "+out[0].lo.toLocaleString("en-US")+" | مقاومت تقریبی: "+out[0].hi.toLocaleString("en-US");
-  try{let r=await fetch("https://fapi.binance.com/fapi/v1/premiumIndex?symbol=BTCUSDT");let j=await r.json();document.getElementById("funding").textContent=(+j.lastFundingRate*100).toFixed(4)+"%"}catch(e){document.getElementById("funding").textContent="ناموجود"}
-  status.textContent="به‌روزرسانی موفق — "+new Date().toLocaleTimeString("fa-IR");
- }catch(e){status.textContent="خطا در دریافت داده: "+e.message+" | ممکن است دسترسی صرافی در شبکه محدود باشد.";document.getElementById("signal").textContent="NO TRADE"}
+ let r=await fetch('https://api.lbank.info/v2/supplement/ticker/price.do?symbol=btc_usdt',{cache:'no-store'});
+ if(!r.ok)throw Error('HTTP '+r.status);
+ let j=await r.json(),a=Array.isArray(j.data)?j.data:[];
+ let v=Number((a.find(x=>String(x.symbol||'').toLowerCase()==='btc_usdt')||a[0]||{}).price);
+ if(!Number.isFinite(v))throw Error('پاسخ قیمت نامعتبر');
+ let s=v.toLocaleString('en-US',{maximumFractionDigits:2});
+ $('price').textContent=s+' USDT';
+ $('spot').textContent=s;
+ $('state').textContent='اتصال برقرار';
+ $('state').className='status good';
+ $('updated').textContent='آخرین بررسی: '+new Date().toLocaleString('fa-IR');
+ }catch(e){
+ $('state').textContent='اتصال ناموفق';
+ $('state').className='status bad';
+ $('signal').textContent='بدون معامله: '+e.message;
+ }
 }
-run();
+$('refresh').onclick=load;
+load();
 </script>
-</body></html>
+</body>
+</html>
