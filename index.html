@@ -3,90 +3,196 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BTC FUTURES AI</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;padding:18px;background:#0b1220;color:#e8eefc;font-family:Tahoma,Arial}
-.main{max-width:850px;margin:auto}
-.card{background:#142238;border:1px solid #30435e;border-radius:15px;padding:18px;margin:15px 0}
-header{display:flex;justify-content:space-between;align-items:center;gap:10px}
-h1{font-size:24px}
-button{background:#f59e0b;border:0;border-radius:9px;padding:12px;font-weight:bold}
-.price{font-size:34px;font-weight:bold;direction:ltr;text-align:right;margin:22px 0}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.metric{background:#0b192b;padding:14px;border-radius:10px}
-.metric small{display:block;color:#9aabc8;margin-bottom:10px}
-.status{padding:8px;border-radius:8px;background:#263854}
-.green{color:#4ade80}.red{color:#fb7185}.yellow{color:#fbbf24}
-.note{font-size:13px;color:#a7b7d2;line-height:2}
+body{margin:0;background:#09111f;color:#e8eef8;font-family:Tahoma,Arial;padding:16px}
+header{padding:18px;background:#111d30;border-radius:14px;margin-bottom:14px}
+h2{margin:0;color:#ffad42}
+small{color:#9aabc2}
+.card{background:#111d30;border:1px solid #263750;border-radius:14px;padding:16px;margin:12px 0}
+.price{font-size:28px;color:#36d6a3;font-weight:bold;margin:12px 0}
+button,select{background:#1c2e48;color:white;border:1px solid #49617f;border-radius:9px;padding:11px;margin:4px;font-size:14px}
+button.active{background:#e88c27}
+canvas{width:100%;height:240px;display:block}
+.row{display:flex;flex-wrap:wrap;gap:6px}
+.stat{display:inline-block;background:#1b2b42;padding:10px;border-radius:9px;margin:4px}
+#status{color:#ffbd61}
 </style>
 </head>
 <body>
-<div class="main">
 <header>
-<div><small>نسخه آزمایشی</small><h1>BTC FUTURES AI</h1></div>
-<button onclick="loadPrice()">به‌روزرسانی</button>
+<h2>BTC FUTURES AI</h2>
+<small>سامانه تحلیل هوشمند بیت‌کوین</small>
+<div id="status">در حال دریافت اطلاعات...</div>
+<div class="price" id="price">---</div>
+<small>قیمت لحظه‌ای اسپات BTC/USDT از LBank</small>
 </header>
 
 <div class="card">
-<b>قیمت لحظه‌ای بیت‌کوین LBank</b>
-<p><span id="status" class="status">در حال اتصال...</span></p>
-<div id="price" class="price">---</div>
-<small id="time">---</small>
-</div>
-
-<div class="card">
-<h3>وضعیت بازار</h3>
-<div class="grid">
-<div class="metric"><small>BTC/USDT اسپات</small><b id="spot">---</b></div>
-<div class="metric"><small>داده فیوچرز</small><b class="yellow">در انتظار اتصال</b></div>
-<div class="metric"><small>Funding Rate</small><b>ناموجود</b></div>
-<div class="metric"><small>Open Interest</small><b>ناموجود</b></div>
+<strong>انتخاب تایم‌فریم</strong>
+<div class="row">
+<button onclick="changeTF('15m',this)" class="active">۱۵ دقیقه</button>
+<button onclick="changeTF('1h',this)">۱ ساعت</button>
+<button onclick="changeTF('4h',this)">۴ ساعت</button>
 </div>
 </div>
 
 <div class="card">
-<h3>سیگنال هوشمند</h3>
-<h3 class="yellow" id="signal">فعلاً بدون معامله</h3>
-<p class="note">تا دریافت داده معتبر فیوچرز، سیگنال لانگ یا شورت صادر نمی‌شود.</p>
+<strong>نمودار قیمت BTC/USDT</strong>
+<canvas id="chart"></canvas>
+<div id="chartStatus"><small>در انتظار داده کندل‌ها...</small></div>
 </div>
 
-<div class="card note">
-منبع قیمت: API عمومی LBank با آدرس جدید.
-این نسخه هنوز تحلیل کامل فیوچرز نیست و معامله خودکار انجام نمی‌دهد.
+<div class="card">
+<strong>تحلیل تکنیکال</strong>
+<div class="row">
+<div class="stat">RSI: <b id="rsi">---</b></div>
+<div class="stat">EMA20: <b id="ema">---</b></div>
+<div class="stat">روند: <b id="trend">---</b></div>
 </div>
+</div>
+
+<div class="card">
+<strong>سیگنال سیستم</strong>
+<h2 id="signal" style="color:#ffbd61;margin-top:12px">در انتظار تحلیل</h2>
+<p id="explain">برای تحلیل، داده کندل لازم است.</p>
+<small>این نسخه آزمایشی است و سفارش معاملاتی ثبت نمی‌کند.</small>
 </div>
 
 <script>
-async function loadPrice(){
-const status=document.getElementById("status");
-status.textContent="در حال دریافت...";
-try{
-const response=await fetch(
-"https://api.lbkex.com/v2/supplement/ticker/price.do?symbol=btc_usdt",
-{cache:"no-store"}
-);
-if(!response.ok)throw new Error("HTTP "+response.status);
-const data=await response.json();
-const item=Array.isArray(data.data)?data.data[0]:null;
-const value=Number(item?.price);
-if(!Number.isFinite(value))throw new Error("قیمت نامعتبر");
+let tf='15m';
+let candles=[];
+let currentPrice=null;
 
-const formatted=value.toLocaleString("en-US",{maximumFractionDigits:2});
-document.getElementById("price").textContent=formatted+" USDT";
-document.getElementById("spot").textContent=formatted;
-status.textContent="اتصال برقرار";
-status.className="status green";
-document.getElementById("time").textContent=
-"آخرین دریافت: "+new Date().toLocaleString("fa-IR");
-}catch(error){
-status.textContent="اتصال ناموفق";
-status.className="status red";
-document.getElementById("signal").textContent=error.message;
+function changeTF(value,btn){
+ tf=value;
+ document.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+ btn.classList.add('active');
+ loadCandles();
 }
+
+async function getPrice(){
+ try{
+  let r=await fetch('https://api.lbkex.com/v2/supplement/ticker/price.do?symbol=btc_usdt');
+  let j=await r.json();
+  let d=Array.isArray(j.data)?j.data[0]:j.data;
+  let p=Number(d.price);
+  if(!p)throw Error('price');
+  currentPrice=p;
+  document.getElementById('price').textContent=p.toLocaleString('en-US')+' USDT';
+  document.getElementById('status').textContent='اتصال قیمت برقرار است';
+ }catch(e){
+  document.getElementById('status').textContent='خطا در دریافت قیمت';
+ }
 }
-loadPrice();
+
+async function loadCandles(){
+ candles=[];
+ document.getElementById('chartStatus').textContent='در حال دریافت کندل‌ها...';
+ try{
+  const url='https://api.lbkex.com/v2/kline.do?symbol=btc_usdt&type='+tf+'&size=100';
+  const r=await fetch(url);
+  const j=await r.json();
+  if(!j.data||!Array.isArray(j.data)||j.data.length<20)throw Error('no candles');
+  candles=j.data.map(x=>({
+   time:Number(x[0]),
+   open:Number(x[1]),
+   high:Number(x[2]),
+   low:Number(x[3]),
+   close:Number(x[4]),
+   volume:Number(x[5])
+  })).filter(x=>x.close>0);
+  if(candles.length<20)throw Error('few candles');
+  drawChart();
+  analyze();
+  document.getElementById('chartStatus').textContent='تعداد کندل دریافت‌شده: '+candles.length;
+ }catch(e){
+  document.getElementById('chartStatus').textContent='دریافت کندل ناموفق بود؛ ممکن است API یا دسترسی مرورگر محدود باشد.';
+  document.getElementById('signal').textContent='NO TRADE';
+  document.getElementById('explain').textContent='بدون داده معتبر کندل، سیگنال صادر نمی‌شود.';
+  document.getElementById('rsi').textContent='---';
+  document.getElementById('ema').textContent='---';
+  document.getElementById('trend').textContent='نامشخص';
+  drawChart();
+ }
+}
+
+function drawChart(){
+ const c=document.getElementById('chart');
+ const ctx=c.getContext('2d');
+ const w=c.width=c.clientWidth*devicePixelRatio;
+ const h=c.height=240*devicePixelRatio;
+ ctx.clearRect(0,0,w,h);
+ if(!candles.length){
+  ctx.fillStyle='#9aabc2';
+  ctx.font='14px Tahoma';
+  ctx.fillText('داده نمودار در دسترس نیست',15,40);
+  return;
+ }
+ let min=Math.min(...candles.map(x=>x.low));
+ let max=Math.max(...candles.map(x=>x.high));
+ let pad=(max-min)*.08||1;
+ min-=pad;max+=pad;
+ const step=w/candles.length;
+ candles.forEach((x,i)=>{
+  let xx=i*step+step/2;
+  let y=v=>h-(v-min)/(max-min)*h;
+  ctx.strokeStyle=x.close>=x.open?'#32d6a0':'#ff657a';
+  ctx.fillStyle=ctx.strokeStyle;
+  ctx.lineWidth=Math.max(1,step*.55);
+  ctx.beginPath();ctx.moveTo(xx,y(x.high));ctx.lineTo(xx,y(x.low));ctx.stroke();
+  let top=y(Math.max(x.open,x.close));
+  let bottom=y(Math.min(x.open,x.close));
+  ctx.fillRect(xx-step*.25,top,Math.max(1,step*.5),Math.max(2,bottom-top));
+ });
+}
+
+function calcEMA(values,period){
+ let k=2/(period+1);
+ let e=values[0];
+ for(let i=1;i<values.length;i++)e=values[i]*k+e*(1-k);
+ return e;
+}
+
+function calcRSI(values){
+ let gains=0,losses=0;
+ for(let i=values.length-14;i<values.length;i++){
+  let d=values[i]-values[i-1];
+  if(d>0)gains+=d;else losses-=d;
+ }
+ if(losses===0)return 100;
+ let rs=(gains/14)/(losses/14);
+ return 100-100/(1+rs);
+}
+
+function analyze(){
+ let closes=candles.map(x=>x.close);
+ let last=closes[closes.length-1];
+ let ema=calcEMA(closes.slice(-20),20);
+ let rsi=calcRSI(closes);
+ document.getElementById('rsi').textContent=rsi.toFixed(1);
+ document.getElementById('ema').textContent=ema.toFixed(2);
+ let trend=last>ema?'صعودی':'نزولی';
+ document.getElementById('trend').textContent=trend;
+ let signal='NO TRADE',reason='شرایط ورود کامل نیست.';
+ if(last>ema&&rsi>=50&&rsi<70){
+  signal='LONG';
+  reason='قیمت بالاتر از EMA20 و RSI در محدوده صعودی است؛ این فقط یک شرط آزمایشی است.';
+ }else if(last<ema&&rsi<50&&rsi>30){
+  signal='SHORT';
+  reason='قیمت پایین‌تر از EMA20 و RSI در محدوده نزولی است؛ این فقط یک شرط آزمایشی است.';
+ }
+ document.getElementById('signal').textContent=signal;
+ document.getElementById('explain').textContent=reason;
+}
+
+getPrice();
+loadCandles();
+setInterval(getPrice,15000);
+setInterval(loadCandles,60000);
+window.addEventListener('resize',drawChart);
 </script>
 </body>
 </html>
